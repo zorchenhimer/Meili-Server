@@ -42,8 +42,13 @@ class TestHandler(BaseHTTPRequestHandler):
 				if 'type' not in urivars:
 					error = True
 				else:
-					if urivars['type'] == 'servertime':
+					types = urivars.split(',')
+					if 'servertime' in types:
 						retmsg = str(int(time.time()))
+					elif 'lastupdate' in types:
+						retmsg = str(int(time.time()-134))
+					elif 'displays' in types:
+						retmsg = str(4)
 					else:
 						error = True
 			else:
