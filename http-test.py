@@ -2,6 +2,7 @@
 
 from BaseHTTPServer import BaseHTTPRequestHandler, HTTPServer
 import time
+import urllib
 
 PORT_NUMBER = 8080
 
@@ -10,8 +11,8 @@ def parse_urivars(varstring):
 	retdict = {}
 	urivars = varstring.split('&')
 	for pair in urivars:
-		key = pair[0:pair.find('=')]
-		val = pair[pair.find('=') + 1:]
+		key = urllib.unquote(pair[0:pair.find('=')]).decode('utf8')
+		val = urllib.unquote(pair[pair.find('=') + 1:]).decode('utf8')
 		if val.find(',') != -1:
 			val = val.split(',')
 		retdict[key] = val
@@ -28,7 +29,6 @@ class TestHandler(BaseHTTPRequestHandler):
 				self.send_header('Content-type', 'text/plain')
 			self.end_headers()
 
-			#self.wfile.write('Derp')
 			f = open('../doc' + self.path)
 			self.wfile.write(f.read())
 			f.close()
@@ -65,6 +65,20 @@ class TestHandler(BaseHTTPRequestHandler):
 		else:
 			self.send_error(404, 'File Not Found: %s' % self.path)
 		return
+	
+	def do_POST(self):
+		if self.path == '/posted':
+			self.send_response(200)
+			self.send_header('Content-type', 'text/plain')
+			self.end_headers()
+			
+			poststr = self.rfile.read( int( self.headers.getheader('content-length') ) )
+			vars = parse_urivars(poststr)
+			
+			self.wfile.write(self.headers)
+			self.wfile.write("\n\n" + str(vars))
+		else:
+			self.send_error(404, 'File Not Found: %s' % self.path)
 
 try:
 	server = HTTPServer( ('', PORT_NUMBER), TestHandler)
@@ -74,4 +88,6 @@ try:
 
 except KeyboardInterrupt:
 	print 'KeyboardInterrupt received.  Shutting down.'
+
+finally:
 	server.socket.close()
