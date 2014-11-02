@@ -5,8 +5,10 @@ import time
 import urllib
 import json
 import xml.etree.ElementTree as ET
+from Lib.API import BaseAPIHandler
 
-PORT_NUMBER = 8080
+PORT_NUMBER = 8081
+BIND_IP = '127.0.0.1'
 
 def parse_urivars(varstring):
 	## varstring is the uri minus everything before, and including, the '?'.
@@ -22,106 +24,6 @@ def parse_urivars(varstring):
 	
 	return retdict
 
-## FFFFFFFFFUUUUUUUUUUu
-def dict_to_XML(rootname, struct):
-	print "Attempting to encode " + str(struct) + " into XML with root " + str(rootname)
-	root = ET.Element(rootname)
-	for key in struct:
-		var = struct[key]
-		if type(var) is type(dict()):
-			e = ET.SubElement(root, key)
-			_rabbit_hole_dict(e, key, var)
-		elif type(var) is type(list()):
-			for item in var:
-				e = ET.SubElement(root, key)
-				e.text = item
-	print "Finished attempt: " + str(ET.dump(root))
-	return ET.dump(root)
-
-def _rabbit_hole_dict(parent, name, struct):
-	for key, var in struct:
-		if type(var) is type(dict()):
-			e = ET.SubElement(parent, _rabbit_hole_dict(key, var))
-		elif type(var) is type(list()):
-			for item in var:
-				e = ET.SubElement(parent, key)
-				e.text = item
-				## TODO: rabbithole for lists
-
-class BaseAPIHandler():
-	def __init__(self):
-		self.__commands = {
-			'schedule': self.cmd_schedule,
-			'status':	self.cmd_status
-		}
-	
-	## Returns array: [content-type, content]
-	def do_command(self, command, vars):
-		## Check for `command` in self._commands
-		##   if exists, call function
-		if command.find('/') == 0:
-			command = command[1:]
-		if command in self.__commands:
-			return self.__commands[command](vars)
-		else:
-			raise Exception('Invalid command: %s' % command)
-	
-	def cmd_schedule(self, vars):
-		## Return the schedule according to `vars`
-		print 'schedule vars: %s' % str(vars)
-		path = ''
-		content_type = ''
-		content = ''
-		if 'format' in vars:
-			if vars['format'] == 'xml':
-				path = '../doc/schedule.xml'
-				content_type = 'text/xml'
-			elif vars['format'] == 'json':
-				content_type = 'application/json'
-				path = '../doc/schedule.json'
-		else:
-			content_type = 'application/json'
-			path = '../doc/schedule.json'
-
-		f = open(path, 'r')
-		content = f.read()
-		f.close()
-		
-		return [content_type, content]
-	
-	def cmd_status(self, vars):
-		## Return the status according to `vars`
-		content_type = ''
-		content_struct = {}
-		encoded_content = ''
-		
-		if 'type' in vars:
-			t = vars['type'].split(',')
-			if 'servertime' in t:
-				content_struct['servertime'] = int(time.time())
-			if 'lastupdate' in t:
-				content_struct['lastupdate'] = int(time.time() - 1343)
-			if 'displays' in t:
-				content_struct['displays'] = int(4)
-		else:
-			content_struct = {"status":"General Stats - TODO"}
-		
-		if 'format' in vars:
-			if vars['format'] == 'xml':
-				##content_type = 'error 501'
-				##encoded_content = dict_to_XML('status', content_struct)
-				raise Exception("501 Not Implemented")
-			elif vars['format'] == 'json':
-				content_type = 'application/json'
-				e = json.JSONEncoder()
-				encoded_content = e.encode(content_struct)
-		else:
-			content_type = 'application/json'
-			e = json.JSONEncoder()
-			encoded_content = e.encode(content_struct)
-		
-		return [content_type, encoded_content]
-
 class TestHandler(BaseHTTPRequestHandler):
 	def process_request(self, basepath, urivars={}, method='get'):
 		api = BaseAPIHandler()
@@ -132,6 +34,17 @@ class TestHandler(BaseHTTPRequestHandler):
 		elif basepath == '/schedule.xml':
 			basepath = '/schedule'
 			urivars['format'] = 'xml'
+		## Chrome always tries to grab the icon.
+		## Send it something so it stops raising errors in the console...
+		elif basepath == '/favicon.ico':
+			print "Client asking for favicon; sending it."
+			self.send_response(200)
+			self.send_header('Content-type', 'image/png')
+			self.end_headers()
+			ico = open('bus.png', 'rb')
+			self.wfile.write(ico.read())
+			ico.close()
+			return
 		
 		print "= processing request =\nbasepath: %s\nurivars: %s" % (str(basepath), str(urivars))
 		
@@ -144,15 +57,15 @@ class TestHandler(BaseHTTPRequestHandler):
 			self.end_headers()
 			self.wfile.write(response[1])
 		except Exception as e:
-			# hacky, i know. should really be a costom exception.
+			# hacky, i know. should really be a custom exception.
 			num = 400
 			msg = str(e)
+			print "Exception caught: " + msg
 			if str(e).find(' '):
 				num = int(str(e)[:str(e).find(' ')])
 				msg = str(e)[str(e).find(' ') + 1:]
 				
 			self.send_error(num, msg)
-
 
 	def do_GET(self):
 		if self.path.find('?') != -1:
@@ -164,8 +77,8 @@ class TestHandler(BaseHTTPRequestHandler):
 		self.process_request(self.path, parse_urivars(self.rfile.read( int(self.headers.getheader('content-length')))), 'post')
 
 try:
-	server = HTTPServer( ('', PORT_NUMBER), TestHandler)
-	print 'Listening on ', PORT_NUMBER
+	server = HTTPServer( (BIND_IP, PORT_NUMBER), TestHandler)
+	print 'Listening on %s:%s' % (BIND_IP, str(PORT_NUMBER))
 
 	server.serve_forever()
 
