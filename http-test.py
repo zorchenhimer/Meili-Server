@@ -1,10 +1,7 @@
 #!/usr/bin/python
 
 from BaseHTTPServer import BaseHTTPRequestHandler, HTTPServer
-import time
 import urllib
-import json
-import xml.etree.ElementTree as ET
 from Lib.API import BaseAPIHandler
 
 PORT_NUMBER = 8081
