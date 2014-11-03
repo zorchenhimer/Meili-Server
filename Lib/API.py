@@ -4,7 +4,7 @@ import json
 import xml.etree.ElementTree as ET
 import time
 
-__all__ = "BaseAIPHandler APIError".split(' ')
+__all__ = "BaseAPIHandler APIError".split(' ')
 
 class BaseAPIHandler():
 	def __init__(self):
@@ -37,6 +37,8 @@ class BaseAPIHandler():
 			elif vars['format'] == 'json':
 				content_type = 'application/json'
 				path = '../doc/schedule.json'
+			else:
+				raise APIError(400, "Invalid format type")
 		else:
 			content_type = 'application/json'
 			path = '../doc/schedule.json'
@@ -88,6 +90,8 @@ class BaseAPIHandler():
 				content_type = 'application/json'
 				e = json.JSONEncoder()
 				encoded_content = e.encode(content_struct)
+			else:
+				raise APIError(400, "Invalid format type")
 		else:
 			content_type = 'application/json'
 			e = json.JSONEncoder()

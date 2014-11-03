@@ -3,6 +3,7 @@
 from BaseHTTPServer import BaseHTTPRequestHandler, HTTPServer
 from API import *
 import urllib
+#import signal
 
 __all__ = "HTTPThread".split(' ')
 
@@ -47,25 +48,18 @@ class HTTPHandler(BaseHTTPRequestHandler):
 		try:
 			response = api.do_command(basepath, urivars)
 			print '== Content-type: %s ==' % str(response[0])
-			print "== Content ==\n" + str(response[1]) + "\n== End Content =="
+			#print "== Content ==\n" + str(response[1]) + "\n== End Content =="
 			self.send_response(200)
 			self.send_header('Content-type', response[0])
 			self.end_headers()
 			self.wfile.write(response[1])
 		except APIError as err:
-			code = err.code
-			if code == 400:
-				self.send_error(400, err.msg)
+			print str(err)
+			self.send_error(err.code, err.msg)
+			
 		except Exception as e:
-			# hacky, i know. should really be a custom exception.
-			num = 400
-			msg = str(e)
-			print "Exception caught: " + msg
-			if str(e).find(' '):
-				num = int(str(e)[:str(e).find(' ')])
-				msg = str(e)[str(e).find(' ') + 1:]
-				
-			self.send_error(num, msg)
+			print "Exception caught: " + str(e)
+			self.send_error(500, "Server Exception: " + str(e))
 
 	def do_GET(self):
 		if self.path.find('?') != -1:
@@ -80,7 +74,7 @@ class HTTPThread():
 	def __init__(self):
 		self.__bind_ip = '127.0.0.1'
 		self.__bind_port = 8080
-	
+		
 	def run(self):
 		try:
 			server = HTTPServer( (self.__bind_ip, self.__bind_port), HTTPHandler)
