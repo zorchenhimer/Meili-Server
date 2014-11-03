@@ -1,1 +1,1 @@
-__all__ = "API".split(' ')
+__all__ = "API HTTPInterface".split(' ')

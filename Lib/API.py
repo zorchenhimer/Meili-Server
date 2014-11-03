@@ -4,6 +4,8 @@ import json
 import xml.etree.ElementTree as ET
 import time
 
+__all__ = "BaseAIPHandler APIError".split(' ')
+
 class BaseAPIHandler():
 	def __init__(self):
 		self.__commands = {
@@ -20,7 +22,7 @@ class BaseAPIHandler():
 		if command in self.__commands:
 			return self.__commands[command](vars)
 		else:
-			raise Exception('Invalid command: %s' % command)
+			raise APIError(400, 'Invalid command: %s' % command)
 	
 	def cmd_schedule(self, vars):
 		## Return the schedule according to `vars`
@@ -92,3 +94,12 @@ class BaseAPIHandler():
 			encoded_content = e.encode(content_struct)
 		
 		return [content_type, encoded_content]
+
+class APIError(Exception):
+	def __init__(self, code=500, msg="General error."):
+		## Code is basically an HTTP code.
+		self.code = int(code)
+		self.msg = str(msg)
+	
+	def __str__(self):
+		return 'APIError: [%s] %s' % (str(self.code), self.msg)
