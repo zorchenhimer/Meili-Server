@@ -1,6 +1,7 @@
 #!/usr/bin/python
 
 from BaseHTTPServer import BaseHTTPRequestHandler, HTTPServer
+from multiprocessing import Process
 from API import *
 import urllib
 #import signal
@@ -74,14 +75,21 @@ class HTTPThread():
 	def __init__(self):
 		self.__bind_ip = '127.0.0.1'
 		self.__bind_port = 8080
-		
+		self.server = HTTPServer( (self.__bind_ip, self.__bind_port), HTTPHandler)
+		self.process = Process(target=self.server.serve_forever, args=[])
+	
+	def start(self):
+		self.process.start()
+		print 'HTTPThread process started with PID %s' % str(self.process.pid)
+	
+	def join(self):
+		self.process.join()
+	
 	def run(self):
 		try:
-			server = HTTPServer( (self.__bind_ip, self.__bind_port), HTTPHandler)
 			print 'Listening on %s:%s' % (self.__bind_ip, str(self.__bind_port))
-
-			server.serve_forever()
+			self.server.serve_forever()
 
 		except KeyboardInterrupt:
 			print 'KeyboardInterrupt received.  Shutting down.'
-			server.socket.close()
+			self.server.socket.close()
