@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<businfo>
+	<departures>
+		{% for bus in departures %}
+		<bus>
+			<time>{{ bus.Time }}</time>
+			<city>{{ bus.City }} </city>
+			<company>{{ bus.Company }}</company>
+			<busnum>{{ bus.Number }}</busnum>
+			<gate>{{ bus.Gate }}</gate>
+			<status>{{ bus.Status }}</status>
+		</bus>
+		{% endfor %}
+	</departures>
+	<arrivals>
+		{% for bus in arrivals %}
+		<bus>
+			<time>{{ bus.Time }}</time>
+			<city>{{ bus.City }} </city>
+			<company>{{ bus.Company }}</company>
+			<status>{{ bus.Status }}</status>
+		</bus>
+		{% endfor %}
+	</arrivals>
+</businfo>
