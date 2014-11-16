@@ -1,4 +1,0 @@
-<?xml version="1.0" encoding="utf-8" ?>
-<status>
-	{% if status.Time != None %}<time>{{ status.Time }}</time>{% endif %}
-</status>

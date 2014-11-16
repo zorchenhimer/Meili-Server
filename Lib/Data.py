@@ -1,10 +1,5 @@
 #!/usr/bin/python
 
-#from Logger import Debug
-
-def Debug(msg):
-	print '[Debug] %s' % msg
-
 class BusStatus():
 	UNKNOWN = 0
 	ONTIME = 1
@@ -24,14 +19,11 @@ class BusList(list):
 		def get_dict(self):
 			ret_list = []
 			for b in self:
-				print "B: " + str(b)
 				ret_list.append(b.get_dict())
 			return ret_list
 
 class BusBase():
 	def __init__(self, company, city, time, status):
-		if company == "Company":
-			Debug("Setting data for header")
 		self.Company = company
 		self.City = city		## Destination/Origin
 		self.Time = time		## Departure/Arrival time

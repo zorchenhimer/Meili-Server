@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<status>
+	<!-- Remove whitespace for production. -->
+	{% if status.Time != None %}<time>{{ status.Time }}</time>{% endif %}
+	{% if status.Displays != None %}<displays>{{ status.Displays }}</displays>{% endif %}
+	{% if status.LastUpdate != None %}<lastupdate>{{ status.LastUpdate }}</lastupdate>{% endif %}
+</status>
