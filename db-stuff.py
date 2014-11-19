@@ -5,6 +5,7 @@ import sys
 import random
 import time
 import datetime
+from Lib.Database import SQLiteDB
 
 con = sql.connect('archive.db')
 
@@ -79,9 +80,17 @@ def add_dummy_data():
 			
 			cur.execute('insert into departures (city, company, status, time, gate, number) values (%s, %s, %s, %s, %s, "%s")' % (city, company, status, t, gate, number))
 
-print "Initializing database..."
-init_db()
+#print "Initializing database..."
+#init_db()
 
-print "Inserting dummy values..."
-add_dummy_data()
-print "done"
+#print "Inserting dummy values..."
+#add_dummy_data()
+#print "done"
+
+db = SQLiteDB()
+#db.init_db()
+print str(db.get_setting('apiversion'))
+print str(db.get_setting('Mr Name'))
+db.set_setting('Other Name', 'Bob')
+print str(db.get_setting('Other Name'))
+
