@@ -90,7 +90,17 @@ def add_dummy_data():
 db = SQLiteDB()
 #db.init_db()
 print str(db.get_setting('apiversion'))
-print str(db.get_setting('Mr Name'))
-db.set_setting('Other Name', 'Bob')
-print str(db.get_setting('Other Name'))
+#print str(db.get_setting('Mr Name'))
+#db.set_setting('Other Name', 'Bob')
+#print str(db.get_setting('Other Name'))
+arrivals = db.get_arrivals()
+departures = db.get_departures()
+
+print "== Arrivals =="
+for a in arrivals:
+	print "Company: %s\nCity: %s\nTime: %s\nStatus: %s\n" % (a.Company, a.City, a.TimeString, a.Status.title())
+
+print "== Departures =="
+for d in departures:
+	print "Company: %s\nCity: %s\nTime: %s\nStatus: %s\nBusnum: %s\nGate: %s\n" % (d.Company, d.City, d.TimeString, d.Status.title(), d.Number, d.Gate)
 

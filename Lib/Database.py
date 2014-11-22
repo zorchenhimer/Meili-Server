@@ -2,6 +2,7 @@
 
 import sqlite3 as lite
 import time
+import Data
 
 class BaseDB():
 	def __init__(self):
@@ -75,6 +76,75 @@ class SQLiteDB(BaseDB):
 
 	def set_connecton(self, db_file):
 		self.dbfile = db_file
+		
+	def get_arrivals(self, start_range=time.time(), end_range=(time.time() + (60 * (60 * 5))), max_returned=50, filter_status=[], cleared=False):
+		if type(False) != type(cleared):
+			raise TypeError('"cleared" argument is invalid type.  Received: ' + str(type(cleared)))
+		
+		## TODO: hard code a max? in a config file maybe?
+		if type(max_returned) != int:
+			raise TypeError('"max_returned" argument is invalid type. Received: ' + str(type(max_returned)))
+		elif max_returned < 1:
+			raise IndexError('"max_returned is less than 1!')
+		
+		query = """
+SELECT
+	arrivals.id, arrivals.time,
+	cities.city, companies.company,
+	statuses.status, arrivals.clear
+FROM
+	arrivals
+LEFT JOIN companies
+	ON arrivals.company = companies.id
+LEFT JOIN cities
+	ON arrivals.city = cities.id
+LEFT JOIN statuses
+	ON arrivals.status = statuses.id"""
+		ret = self.__run_query(query)
+		arrivals = Data.BusList()
+		for row in ret:
+			arrivals.append(
+				Data.BusArrival(
+					row[3],	# Company
+					row[2], # City
+					row[1], # Time
+					row[4] # Status
+				)
+			)
+		return arrivals
+	
+	## TODO: filters
+	def get_departures(self):
+		query = """
+SELECT
+	departures.id, departures.time,
+	departures.number, cities.city,
+	companies.company, statuses.status,
+	gates.gate, departures.clear
+FROM
+	departures
+LEFT JOIN companies
+	ON departures.company = companies.id
+LEFT JOIN cities
+	ON departures.city = cities.id
+LEFT JOIN statuses
+	ON departures.status = statuses.id
+LEFT JOIN gates
+	ON departures.gate = gates.id"""
+		ret = self.__run_query(query)
+		departures = Data.BusList()
+		for row in ret:
+			departures.append(
+				Data.BusDeparture(
+					row[4], # Company
+					row[3], # City
+					row[1], # Time
+					row[5], # Status
+					row[6], # Gate
+					row[2] # Number
+				)
+			)
+		return departures
 	
 	def get_setting(self, name):
 		query = 'SELECT value FROM settings WHERE name=?'
