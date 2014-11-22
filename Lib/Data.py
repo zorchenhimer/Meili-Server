@@ -1,5 +1,7 @@
 #!/usr/bin/python
 
+import datetime
+
 class BusStatus():
 	UNKNOWN = 0
 	ONTIME = 1
@@ -28,6 +30,11 @@ class BusBase():
 		self.City = city		## Destination/Origin
 		self.Time = time		## Departure/Arrival time
 		self.Status = status
+	
+	@property
+	def TimeString(self):
+		#return time.strftime('%H:%M:%S', self.Time)
+		return datetime.datetime.fromtimestamp(int(self.Time)).strftime('%H:%M:%S')
 	
 	def update_status(self, status):
 		## FIXME: input validation!
