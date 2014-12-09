@@ -61,7 +61,7 @@ class BusBase():
 		return ret_dict
 
 class BusArrival(BusBase):
-	def __init__(self, company=None, city=None, time=None, status=None):
+	def __init__(self, company, city, time, status):
 		BusBase.__init__(self, company, city, time, status)
 	
 	def is_arrival(self):
@@ -71,7 +71,7 @@ class BusArrival(BusBase):
 		return False
 
 class BusDeparture(BusBase):
-	def __init__(self, company=None, city=None, time=None, status=None, gate=None, number=None):
+	def __init__(self, company, city, time, status, gate, number):
 		BusBase.__init__(self, company, city, time, status)
 		self.Number = number
 		self.Gate = gate
