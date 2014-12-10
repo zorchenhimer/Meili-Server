@@ -265,6 +265,10 @@ LEFT JOIN gates
 		query = 'SELECT id, status FROM statuses'
 		return self.__run_query(query)
 		
+	def get_gate_list(self):
+		query = 'SELECT id, gate FROM gates'
+		return self.__run_query(query)
+		
 	def get_setting(self, name):
 		query = 'SELECT value FROM settings WHERE name=?'
 		ret = self.__run_query(query, name)

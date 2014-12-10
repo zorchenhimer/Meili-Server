@@ -23,10 +23,12 @@ class Status():
 @server.route('/')
 def debug_index():
 	db = SQLiteDB()
-	ci = db.get_city_list()
-	co = db.get_company_list()
-	st = db.get_status_list()
-	return render_template('debug-gui.html', companies=co, cities=ci, statuses=st)
+	return render_template('debug-gui.html',
+						   companies=db.get_company_list(),
+						   cities=db.get_city_list(),
+						   statuses=db.get_status_list(),
+						   gates=db.get_gate_list()
+			)
 		
 @server.route('/schedule')
 @server.route('/schedule.<format>')
@@ -85,7 +87,7 @@ def add_arrival():
 
 @server.route('/add_departure', methods=['GET', 'POST'])
 def add_departure():
-	pass
+	raise NotImplementedError
 
 @server.route('/add_company', methods=['GET', 'POST'])
 def add_company():

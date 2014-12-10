@@ -36,4 +36,49 @@
 		<input type="submit" value="Add Arrival" />
 	</form>
 </div>
+
+<h2>Add Departure</h2>
+<div>
+	<form method="POST" action="/add_departure">
+		<label for="co">Company</label>
+		<select name="company" id="co">
+			{% for co in companies %}
+			<option value="{{ co[0] }}">{{ co[1] }}</option>
+			{% endfor %}
+		</select><br />
+		
+		<label for="ci">City</label>
+		<select name="city" id="ci">
+			{% for ci in cities %}
+			<option value="{{ ci[0] }}">{{ ci[1] }}</option>
+			{% endfor %}
+		</select><br />
+		
+		<label for="st">Status</label>
+		<select name="status" id="st">
+			{% for s in statuses %}
+			<option value="{{ s[0] }}">{{ s[1].title() }}</option>
+			{% endfor %}
+		</select><br />
+		
+		<label for="gt">Gate</label>
+		<select name="gate" id="gt">
+			{% for g in gates %}
+			<option value="{{ g[0] }}">{{ g[1] }}</option>
+			{% endfor %}
+		</select><br />
+		
+		<label for="bn">Bus Number</label>
+		<input type="text" name="busnum" id="bn" /><br />
+		
+		<label for="ti">Time</label>
+		<input type="text" name="time" id="ti" /><br />
+		<label for="tinow">"Now"</label>
+		<input type="checkbox" name="time_now" id="tinow" />
+		
+		<br /><br />
+		
+		<input type="submit" value="Add Deprature" />
+	</form>
+</div>
 </body>
