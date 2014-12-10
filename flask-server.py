@@ -1,44 +1,18 @@
 #!/usr/bin/python2
 
-from flask import Flask, render_template, Response, abort
+from flask import Flask, render_template, Response, abort, request, jsonify, make_response
 from Lib.Data import BusArrival, BusDeparture, BusList
+from Lib.Database import SQLiteDB, DBCaches
 import json
 import time
 
 server = Flask(__name__)
 
-arrivals = BusList()
-departures = BusList()
-json_dict = None
-
-# Temporary until I connect a database.
-def parse_json_source():
-	jfile = open('../doc/schedule.json', 'r')
-	json_dict = json.load(jfile)
-	jfile.close()
-
-	arrivals.clear()
-	departures.clear()
-
-	for arrival in json_dict['arrivals']:
-		arrivals.append(
-			BusArrival(
-				arrival['company'],
-				arrival['city'],
-				arrival['time'],
-				arrival['status'])
-		)
-	
-	for departure in json_dict['departures']:
-		departures.append(
-			BusDeparture(
-				departure['company'],
-				departure['city'],
-				departure['time'],
-				departure['status'],
-				departure['gate'],
-				departure['busnum'])
-		)
+def json_error(message):
+	return make_response(
+				jsonify({'error': str(message)}),
+				400
+			)
 
 class Status():
 	def __init__(self):
@@ -48,10 +22,14 @@ class Status():
 
 @server.route('/schedule')
 @server.route('/schedule.<format>')
-def xml_schedule(format='json'):
-	parse_json_source()
+def schedule(format='json'):
 	data = None
 	mime = None
+	
+	db = SQLiteDB()
+	arrivals = db.get_arrivals()
+	departures = db.get_departures()
+	
 	if format == 'xml':
 		data = render_template('api/schedule.xml', arrivals=arrivals, departures=departures)
 		mime = 'text/xml'
@@ -75,6 +53,48 @@ def status():
 def favicon():
 	return server.send_static_file('bus.png')
 
+# TODO: make this POST only.
+@server.route('/add_arrival', methods=['GET', 'POST'])
+def add_arrival():
+	vars = {}
+	vars['company'] = request.args.get('company')
+	vars['city'] = request.args.get('city')
+	vars['time'] = request.args.get('time')
+	vars['status'] = request.args.get('status')
+		
+	for key,val in vars.items():
+		if val is None:
+			abort(json_error("Missing something"))
+	
+	db = SQLiteDB()
+	db.add_arrival(vars['company'], vars['city'], vars['time'], vars['status'])
+	return str(vars)
+
+@server.route('/add_departure', methods=['GET', 'POST'])
+def add_departure():
+	pass
+
+@server.route('/add_company', methods=['GET', 'POST'])
+def add_company():
+	db = SQLiteDB()
+	company = request.args.get('name')
+	row = db.add_company(company)
+	return jsonify({'id': int(row[0][0]), 'company': company})
+
+@server.route('/cache')
+def debug_cache():
+	db = SQLiteDB()
+	db.update_cache()
+	cache = DBCaches()
+	return str([cache.Gates, cache.Cities, cache.Statuses, cache.Companies])
+
+@server.route('/setting')
+def get_setting():
+	var = request.args.get('var')
+	db = SQLiteDB()
+	val = db.get_setting(var)
+	return jsonify({var: val})
+	
 if __name__ == '__main__':
 	server.debug = True
 	server.run()

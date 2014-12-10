@@ -4,7 +4,7 @@ import sqlite3 as lite
 import time
 import Data
 
-class BaseDB():
+class BaseDB(object):
 	def __init__(self):
 		pass
 	
@@ -63,7 +63,7 @@ class SQLiteDB(BaseDB):
 		self.dbfile = 'archive.db'
 		self.conn = None
 		self.LastRowcount = 0
-	
+		
 	def init_db(self):
 		sql_file = open('dbinit.sql', 'r')
 		sql_text = sql_file.read()
@@ -146,6 +146,90 @@ LEFT JOIN gates
 			)
 		return departures
 	
+	def add_arrival(self, company, city, time, status):
+		co = self.get_company_id(company)
+		ci = self.get_city_id(city)
+		st = self.get_status_id(status)
+		
+		query = 'INSERT INTO arrivals (company, city, time, status) VALUES (?, ?, ? ,?)'
+		return self.__run_query(query, co, ci, int(time), st)
+	
+	def get_company_id(self, company):
+		cache = DBCaches()
+		## Update if cache is older than an hour.
+		if cache.LastUpdate > time.time() - (60*60) or cache.Companies == None:
+			self.update_cache()
+			
+		co = None
+		for row in cache.Companies:
+			if row[1].lower() == company.lower():
+				co = row[0]
+				break
+			co = self.add_company(company)
+			cache.LastUpdate = 0	# Force update on next check
+		return co
+		
+	def get_city_id(self, city):
+		cache = DBCaches()
+		## Update if cache is older than an hour.
+		if cache.LastUpdate > time.time() - (60*60) or cache.Cities == None:
+			self.update_cache()
+		
+		ci = None
+		for row in cache.Cities:
+			if row[1].lower() == city.lower():
+				ci = row[0]
+				break
+			ci = self.add_city(city)
+			cache.LastUpdate = 0	# Force update on next check
+		return ci
+	
+	def get_status_id(self, status):
+		cache = DBCaches()
+		## Update if cache is older than an hour.
+		if cache.LastUpdate > time.time() - (60*60) or cache.Statuses == None:
+			self.update_cache()
+		
+		st = None
+		for row in cache.Statuses:
+			if row[1].lower() == status.lower():
+				st = row[0]
+				break
+			#self.add_status(status)
+			#cache.LastUpdate = 0	# Force update on next check
+			raise Excetpion("Invalid status in get_status_id(): '%s'" % str(status))
+		return st
+	
+	def add_company(self, company):
+		query_add = 'INSERT INTO companies (company) VALUES (?)'
+		query_get = 'SELECT id FROM companies WHERE company = ?'
+		self.__run_query(query_add, company)
+		id = self.__run_query(query_get, company)
+		self.conn.commit()
+		return id[0][0]
+	
+	def add_city(self, city):
+		query_add = 'INSERT INTO cities (city) VALUES (?)'
+		query_get = 'SELECT id FROM cities WHERE city = ?'
+		self.__run_query(query_add, city)
+		id = self.__run_query(query_get, city)
+		self.conn.commit()
+		return id[0][0]
+	
+	def add_gate(self, gate):
+		query_add = 'INSERT INTO gates (gate) VALUES (?)'
+		query_get = 'SELECT id FROM gates WHERE gate = ?'
+		self.__run_query(query_add, gate)
+		id = self.__run_query(query_get, gate)
+		self.conn.commit()
+		return id[0][0]
+	
+	## Not so sure if this is a good idea or not...
+	def add_status(self, status):
+		raise NotImplementedError
+		query = 'INSERT INTO statuses (status) VALUES (?); SELECT id FROM statuses WHERE status = "?"'
+		return self.__run_query(query, status, status)
+		
 	def get_setting(self, name):
 		query = 'SELECT value FROM settings WHERE name=?'
 		ret = self.__run_query(query, name)
@@ -153,21 +237,50 @@ LEFT JOIN gates
 			return None
 		else:
 			return ret[0][0]
-
+			
 	def set_setting(self, name, value):
 		query = 'INSERT OR REPLACE INTO settings (name, value) VALUES (?, ?)'
 		self.__run_query(query, name, value)
 
+	def update_cache(self):
+		cache = DBCaches()
+		cache.Gates = self.__run_query('SELECT * FROM gates')
+		cache.Companies = self.__run_query('SELECT * FROM companies')
+		cache.Statuses = self.__run_query('SELECT * FROM statuses')
+		cache.Cities = self.__run_query('SELECT * FROM cities')
+		cache.LastUpdate = time.time()
+		
 	def __run_query(self, query, *args):
 		rows = None
-		self.__open_connection()
+		self.conn = lite.connect(self.dbfile)
 		with self.conn:
 			cur = self.conn.cursor()
 			cur.execute(query, args)
 			self.LastRowcount = cur.rowcount
 			rows = cur.fetchall()
 		return rows
-	
-	def __open_connection(self):
-		self.conn = lite.connect(self.dbfile)
 
+class DBCaches():
+	class cacheclass():
+		def __init__(self):
+			self.Gates = None
+			self.Cities = None
+			self.Statuses = None
+			self.Companies = None
+			self.LastUpdate = None
+	
+	__instance = None
+	
+	def __init__(self):
+		if DBCaches.__instance == None:
+			DBCaches.__instance = DBCaches.cacheclass()
+		
+		self.__dict__['_Singleton_instance'] = DBCaches.__instance
+		
+	def __getattr__(self, attr):
+		return getattr(self.__instance, attr)
+	
+	def __setattr__(self, attr, value):
+		if attr is "ScreenSize" or attr is "Bounds":
+			raise NotImplementedError
+		return setattr(self.__instance, attr, value)
