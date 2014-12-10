@@ -20,6 +20,14 @@ class Status():
 		self.Displays = None
 		self.LastUpdate = None
 
+@server.route('/')
+def debug_index():
+	db = SQLiteDB()
+	ci = db.get_city_list()
+	co = db.get_company_list()
+	st = db.get_status_list()
+	return render_template('debug-gui.html', companies=co, cities=ci, statuses=st)
+		
 @server.route('/schedule')
 @server.route('/schedule.<format>')
 def schedule(format='json'):
@@ -54,21 +62,26 @@ def favicon():
 	return server.send_static_file('bus.png')
 
 # TODO: make this POST only.
-@server.route('/add_arrival', methods=['GET', 'POST'])
+@server.route('/add_arrival', methods=['POST'])
 def add_arrival():
 	vars = {}
-	vars['company'] = request.args.get('company')
-	vars['city'] = request.args.get('city')
-	vars['time'] = request.args.get('time')
-	vars['status'] = request.args.get('status')
-		
+	vars['company'] = request.form.get('company')
+	vars['city'] = request.form.get('city')
+	vars['time'] = request.form.get('time')
+	vars['status'] = request.form.get('status')
+	
+	now = request.form.get('time_now')
+	ret = ''
+	if now is not None:
+		vars['time'] = time.time()
+	
 	for key,val in vars.items():
 		if val is None:
 			abort(json_error("Missing something"))
 	
 	db = SQLiteDB()
-	db.add_arrival(vars['company'], vars['city'], vars['time'], vars['status'])
-	return str(vars)
+	dbret = db.add_arrival(vars['company'], vars['city'], vars['time'], vars['status'])
+	return str(dbret)
 
 @server.route('/add_departure', methods=['GET', 'POST'])
 def add_departure():

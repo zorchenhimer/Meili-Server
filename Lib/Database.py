@@ -57,6 +57,18 @@ class BaseDB(object):
 	
 	def modify_company(self, id, company_name):
 		raise NotImplementedError
+	
+	def get_city_list(self):
+		raise NotImplementedError
+	
+	def get_company_list(self):
+		raise NotImplementedError
+	
+	def get_status_list(self):
+		raise NotImplementedError
+	
+	def get_gate_list(self):
+		raise NotImplementedError
 
 class SQLiteDB(BaseDB):
 	def __init__(self):
@@ -147,9 +159,20 @@ LEFT JOIN gates
 		return departures
 	
 	def add_arrival(self, company, city, time, status):
-		co = self.get_company_id(company)
-		ci = self.get_city_id(city)
-		st = self.get_status_id(status)
+		if company.isdigit():
+			co = int(company)
+		else:
+			co = self.get_company_id(company)
+		
+		if city.isdigit():
+			ci = int(city)
+		else:
+			ci = self.get_city_id(city)
+		
+		if status.isdigit():
+			st = int(status)
+		else:
+			st = self.get_status_id(status)
 		
 		query = 'INSERT INTO arrivals (company, city, time, status) VALUES (?, ?, ? ,?)'
 		return self.__run_query(query, co, ci, int(time), st)
@@ -229,6 +252,18 @@ LEFT JOIN gates
 		raise NotImplementedError
 		query = 'INSERT INTO statuses (status) VALUES (?); SELECT id FROM statuses WHERE status = "?"'
 		return self.__run_query(query, status, status)
+	
+	def get_city_list(self):
+		query = 'SELECT id, city FROM cities'
+		return self.__run_query(query)
+	
+	def get_company_list(self):
+		query = 'SELECT id, company FROM companies'
+		return self.__run_query(query)
+	
+	def get_status_list(self):
+		query = 'SELECT id, status FROM statuses'
+		return self.__run_query(query)
 		
 	def get_setting(self, name):
 		query = 'SELECT value FROM settings WHERE name=?'

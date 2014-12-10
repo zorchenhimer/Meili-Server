@@ -1,0 +1,39 @@
+<html>
+<head><title>Meili - Debug GUI</title></head>
+<body>
+
+<h2>Add Arrival</h2>
+<div>
+	<form method="POST" action="/add_arrival">
+		<label for="co">Company</label>
+		<select name="company" id="co">
+			{% for co in companies %}
+			<option value="{{ co[0] }}">{{ co[1] }}</option>
+			{% endfor %}
+		</select><br />
+		
+		<label for="ci">City</label>
+		<select name="city" id="ci">
+			{% for ci in cities %}
+			<option value="{{ ci[0] }}">{{ ci[1] }}</option>
+			{% endfor %}
+		</select><br />
+		
+		<label for="st">Status</label>
+		<select name="status" id="st">
+			{% for s in statuses %}
+			<option value="{{ s[0] }}">{{ s[1].title() }}</option>
+			{% endfor %}
+		</select><br />
+		
+		<label for="ti">Time</label>
+		<input type="text" name="time" id="ti" /><br />
+		<label for="tinow">"Now"</label>
+		<input type="checkbox" name="time_now" id="tinow" />
+		
+		<br /><br />
+		
+		<input type="submit" value="Add Arrival" />
+	</form>
+</div>
+</body>
