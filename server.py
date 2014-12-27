@@ -63,7 +63,6 @@ def status():
 def favicon():
 	return server.send_static_file('bus.png')
 
-# TODO: make this POST only.
 @server.route('/add_arrival', methods=['POST'])
 def add_arrival():
 	vars = {}
@@ -87,7 +86,30 @@ def add_arrival():
 
 @server.route('/add_departure', methods=['GET', 'POST'])
 def add_departure():
-	raise NotImplementedError
+	vars = {}
+	vars['company'] = request.form.get('company')
+	vars['city'] = request.form.get('city')
+	vars['time'] = request.form.get('time')
+	vars['status'] = request.form.get('status')
+	vars['gate'] = request.form.get('gate')
+	vars['busnum'] = request.form.get('busnum')
+	
+	now = request.form.get('time_now')
+	ret = ''
+	if now is not None:
+		vars['time'] = time.time()
+	
+	for key,val in vars.items():
+		if key == 'busnum':
+			## This field can be blank. (should that be allowed?)
+			continue
+		if val is None:
+			abort(json_error("Missing something"))
+	
+	db = SQLiteDB()
+	dbret = db.add_departure(vars['company'], vars['city'], vars['time'], vars['status'], vars['gate'], vars['busnum'])
+	return str(dbret)
+	#raise NotImplementedError
 
 @server.route('/add_company', methods=['GET', 'POST'])
 def add_company():

@@ -78,29 +78,30 @@ def add_dummy_data():
 			number = gates[r.randint(0, len(gates) - 1)]
 			t = int(time.time()) + (r.randint(0, 60) * 60)
 			
-			cur.execute('insert into departures (city, company, status, time, gate, number) values (%s, %s, %s, %s, %s, "%s")' % (city, company, status, t, gate, number))
+			cur.execute('insert into departures (city, company, status, time, gate, busnum) values (%s, %s, %s, %s, %s, "%s")' % (city, company, status, t, gate, number))
 
 #print "Initializing database..."
 #init_db()
 
 #print "Inserting dummy values..."
-#add_dummy_data()
+add_dummy_data()
 #print "done"
 
-db = SQLiteDB()
+#db = SQLiteDB()
 #db.init_db()
-print str(db.get_setting('apiversion'))
+#print str(db.get_setting('apiversion'))
+
 #print str(db.get_setting('Mr Name'))
 #db.set_setting('Other Name', 'Bob')
 #print str(db.get_setting('Other Name'))
-arrivals = db.get_arrivals()
-departures = db.get_departures()
+#arrivals = db.get_arrivals()
+#departures = db.get_departures()
 
-print "== Arrivals =="
-for a in arrivals:
-	print "Company: %s\nCity: %s\nTime: %s\nStatus: %s\n" % (a.Company, a.City, a.TimeString, a.Status.title())
+#print "== Arrivals =="
+#for a in arrivals:
+#	print "Company: %s\nCity: %s\nTime: %s\nStatus: %s\n" % (a.Company, a.City, a.TimeString, a.Status.title())
 
-print "== Departures =="
-for d in departures:
-	print "Company: %s\nCity: %s\nTime: %s\nStatus: %s\nBusnum: %s\nGate: %s\n" % (d.Company, d.City, d.TimeString, d.Status.title(), d.Number, d.Gate)
+#print "== Departures =="
+#for d in departures:
+#	print "Company: %s\nCity: %s\nTime: %s\nStatus: %s\nBusnum: %s\nGate: %s\n" % (d.Company, d.City, d.TimeString, d.Status.title(), d.Number, d.Gate)
 

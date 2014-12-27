@@ -81,7 +81,8 @@ class SQLiteDB(BaseDB):
 		sql_text = sql_file.read()
 		sql_file.close()
 
-		self.__open_connection()
+		#self.__open_connection()
+		self.conn = lite.connect(self.dbfile)
 		with self.conn:
 			cur = self.conn.cursor()
 			cur.executescript(sql_text)
@@ -130,7 +131,7 @@ LEFT JOIN statuses
 		query = """
 SELECT
 	departures.id, departures.time,
-	departures.number, cities.city,
+	departures.busnum, cities.city,
 	companies.company, statuses.status,
 	gates.gate, departures.clear
 FROM
@@ -176,6 +177,30 @@ LEFT JOIN gates
 		
 		query = 'INSERT INTO arrivals (company, city, time, status) VALUES (?, ?, ? ,?)'
 		return self.__run_query(query, co, ci, int(time), st)
+
+	def add_departure(self, company, city, time, status, gate, busnum):
+		if company.isdigit():
+			co = int(company)
+		else:
+			co = self.get_company_id(company)
+		
+		if city.isdigit():
+			ci = int(city)
+		else:
+			ci = self.get_city_id(city)
+		
+		if status.isdigit():
+			st = int(status)
+		else:
+			st = self.get_status_id(status)
+
+		if gate.isdigit():
+			gt = int(gate)
+		else:
+			gt = self.get_gate_id(gate)
+
+		query = 'INSERT INTO departures (company, city, time, status, gate, busnum) VALUES (?, ?, ? ,?, ?, ?)'
+		return self.__run_query(query, co, ci, int(time), st, gt, busnum)
 	
 	def get_company_id(self, company):
 		cache = DBCaches()
