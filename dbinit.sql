@@ -20,3 +20,5 @@ CREATE TABLE companies(id INTEGER PRIMARY KEY, company TEXT);
 DROP TABLE IF EXISTS gates;
 CREATE TABLE gates(id INTEGER PRIMARY KEY, gate TEXT);
 
+INSERT INTO statuses (status) VALUES ("Projected"), ("On Time"), ("Delayed"), ("Canceled"),
+                                     ("Boarding"), ("Departed");
