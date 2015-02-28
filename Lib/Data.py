@@ -59,6 +59,8 @@ class BusBase():
             ret_dict["gate"] = self.Gate
 
         return ret_dict
+    def __str__(self):
+        return self.to_string()
 
 class BusArrival(BusBase):
     def __init__(self, company, city, time, status):

@@ -81,4 +81,22 @@
 		<input type="submit" value="Add Deprature" />
 	</form>
 </div>
+
+<h2>Arrivals</h2>
+<div>
+    {% if arrivals %}
+    <ul>{% for bus in arrivals %}
+        <li>{{ bus }}</li>
+    {% endfor %}</ul>
+    {% else %}<p>No Arrivals. :C</p>{% endif %}
+</div>
+
+<h2>Departures</h2>
+<div>
+    {% if departures %}
+    <ul>{% for bus in departures %}
+        <li>{{ bus }}</li>
+    {% endfor %}</ul>
+    {% else %}<p>No Departures. :C</p>{% endif %}
+</div>
 </body>

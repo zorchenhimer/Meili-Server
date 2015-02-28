@@ -27,7 +27,9 @@ def debug_index():
         companies=db.get_company_list(),
         cities=db.get_city_list(),
         statuses=db.get_status_list(),
-        gates=db.get_gate_list()
+        gates=db.get_gate_list(),
+        arrivals=db.get_arrivals(),
+        departures=db.get_departures(),
     )
 
 @server.route('/schedule')
