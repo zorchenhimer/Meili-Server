@@ -25,7 +25,8 @@ class BusList(list):
             return ret_list
 
 class BusBase():
-    def __init__(self, company, city, time, status):
+    def __init__(self, company, city, time, status, ID):
+        self.ID = ID
         self.Company = company
         self.City = city        ## Destination/Origin
         self.Time = time        ## Departure/Arrival time
@@ -41,7 +42,7 @@ class BusBase():
         self.Status = status
 
     def to_string(self):
-        return str([self.Company, self.Status, self.Time, self.City])
+        return str([self.ID, self.Company, self.Status, self.Time, self.City])
 
     def is_arrival(self):
         raise NotImplementedError
@@ -63,8 +64,8 @@ class BusBase():
         return self.to_string()
 
 class BusArrival(BusBase):
-    def __init__(self, company, city, time, status):
-        BusBase.__init__(self, company, city, time, status)
+    def __init__(self, company, city, time, status, ID):
+        BusBase.__init__(self, company, city, time, status, ID)
 
     def is_arrival(self):
         return True
@@ -73,8 +74,8 @@ class BusArrival(BusBase):
         return False
 
 class BusDeparture(BusBase):
-    def __init__(self, company, city, time, status, gate, number):
-        BusBase.__init__(self, company, city, time, status)
+    def __init__(self, company, city, time, status, gate, number, ID):
+        BusBase.__init__(self, company, city, time, status, ID)
         self.Number = number
         self.Gate = gate
 

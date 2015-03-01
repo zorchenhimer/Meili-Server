@@ -3,7 +3,7 @@
 import sqlite3 as lite
 import os
 import time
-import Data
+import Lib.Data as Data
 
 def singleton(cls):
     instances = {}
@@ -79,6 +79,17 @@ class BaseDB(object):
     def get_gate_list(self):
         raise NotImplementedError
 
+    ## Janitorial stuff.  Times are in minutes.
+    def update_delayed(self, time_threshold = 1):
+        raise NotImplementedError
+
+    def clear_canceled(self, time_threshold = 20):
+        raise NotImplementedError
+
+    ## Arrived and departed
+    def clear_done(self, time_threshold = 20):
+        raise NotImplementedError
+
 @singleton
 class SQLiteDB(BaseDB):
     def __init__(self):
@@ -130,12 +141,14 @@ LEFT JOIN statuses
         ret = self.__run_query(query)
         arrivals = Data.BusList()
         for row in ret:
+            print('row: {r}'.format(r=row))
             arrivals.append(
                 Data.BusArrival(
                     row[3],    # Company
                     row[2], # City
                     row[1], # Time
-                    row[4] # Status
+                    row[4], # Status
+                    row[0], # id
                 )
             )
         return arrivals
@@ -168,7 +181,8 @@ LEFT JOIN gates
                     row[1], # Time
                     row[5], # Status
                     row[6], # Gate
-                    row[2] # Number
+                    row[2], # Number
+                    row[0], # id
                 )
             )
         return departures
@@ -319,6 +333,76 @@ LEFT JOIN gates
     def set_setting(self, name, value):
         query = 'INSERT OR REPLACE INTO settings (name, value) VALUES (?, ?)'
         self.__run_query(query, name, value)
+
+    def update_delayed(self, time_threshold = 1):
+        threshold = time.time() - time_threshold * 60
+        ## FIXME: needs to update entries with 'projected' as well
+        query_departures = """
+UPDATE
+    departures
+SET
+    status = (SELECT id FROM statuses WHERE status = 'delayed')
+WHERE
+    status = (SELECT id FROM statuses WHERE status = 'on time') AND
+    time < ?
+"""
+        query_arrivals = """
+UPDATE
+    arrivals
+SET
+    status = (SELECT id FROM statuses WHERE status = 'delayed')
+WHERE
+    status = (SELECT id FROM statuses WHERE status = 'on time') AND
+    time < ?
+"""
+        self.__run_query(query_departures, threshold)
+        self.__run_query(query_arrivals, threshold)
+
+    def clear_canceled(self, time_threshold = 20):
+        threshold = time.time() - time_threshold * 60
+        query_departures = """
+UPDATE
+    departures
+SET
+    clear = 1
+WHERE
+    status = (SELECT id FROM statuses WHERE status = 'canceled') AND
+    time < ?
+"""
+        query_arrivals = """
+UPDATE
+    arrivals
+SET
+    clear = 1
+WHERE
+    status = (SELECT id FROM statuses WHERE status = 'canceled') AND
+    time < ?
+"""
+        self.__run_query(query_departures, threshold)
+        self.__run_query(query_arrivals, threshold)
+
+    def clear_done(self, time_threshold = 20):
+        threshold = time.time() - time_threshold * 60
+        query_departures = """
+UPDATE
+    departures
+SET
+    clear = 1
+WHERE
+    status = (SELECT id FROM statuses WHERE status = 'departed') AND
+    time < ?
+"""
+        query_arrivals = """
+UPDATE
+    departures
+SET
+    clear = 1
+WHERE
+    status = (SELECT id FROM statuses WHERE status = 'arrived') AND
+    time < ?
+"""
+        self.__run_query(query_departures, threshold)
+        self.__run_query(query_arrivals, threshold)
 
     def update_cache(self):
         cache = DBCaches()
