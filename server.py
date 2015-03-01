@@ -1,6 +1,6 @@
 #!/usr/bin/python2
 
-from flask import Flask, render_template, Response, abort, request, jsonify, make_response
+from flask import Flask, render_template, Response, abort, request, jsonify, make_response, redirect
 from Lib.Data import BusArrival, BusDeparture, BusList
 from Lib.Database import SQLiteDB, DBCaches
 import json
@@ -82,7 +82,7 @@ def add_arrival():
             abort(json_error("Missing something"))
 
     dbret = db.add_arrival(vars['company'], vars['city'], vars['time'], vars['status'])
-    return str(dbret)
+    return redirect('/', code=302)
 
 @server.route('/add_departure', methods=['GET', 'POST'])
 def add_departure():
@@ -107,8 +107,7 @@ def add_departure():
             abort(json_error("Missing something"))
 
     dbret = db.add_departure(vars['company'], vars['city'], vars['time'], vars['status'], vars['gate'], vars['busnum'])
-    return str(dbret)
-    #raise NotImplementedError
+    return redirect('/', code=302)
 
 @server.route('/add_company', methods=['GET', 'POST'])
 def add_company():
