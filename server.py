@@ -2,7 +2,8 @@
 
 from flask import Flask, render_template, Response, abort, request, jsonify, make_response, redirect
 from Lib.Data import BusArrival, BusDeparture, BusList
-from Lib.Database import SQLiteDB, DBCaches
+from Lib.Database import DBCaches
+from Lib.SQLite import SQLiteDB
 import json
 import time
 
