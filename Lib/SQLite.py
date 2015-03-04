@@ -59,7 +59,6 @@ LEFT JOIN statuses
         ret = self.__run_query(query)
         arrivals = BusList()
         for row in ret:
-            print('row: {r}'.format(r=row))
             arrivals.append(
                 BusArrival(
                     row[3],    # Company
