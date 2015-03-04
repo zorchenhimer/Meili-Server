@@ -118,13 +118,16 @@ def add_company():
     row = db.add_company(company)
     return jsonify({'id': int(row[0][0]), 'company': company})
 
-@server.route('/modify', methods=['GET', 'POST'])
-def modify_bus():
+@server.route('/modify/<bus_type>/<int:id>/', methods=['GET', 'POST'])
+def modify_bus(bus_type, id):
     vars = {}
-    if request.method != 'POST':
-        vars['id'] = request.args.get('id')
-        vars['type'] = request.args.get('type')
+    vars['id'] = id
+    if bus_type == 'arrival' or bus_type == 'departure':
+        vars['type'] = bus_type
     else:
+        abort(404)
+
+    if request.method == 'POST':
         vars['id'] = request.form.get('id')
         vars['type'] = request.form.get('type')
         vars['city'] = request.form.get('city')
@@ -158,10 +161,16 @@ def modify_bus():
 
     ## FIXME: validate this stuff.
     if vars['type'] == 'arrival':
-        bus = db.get_arrival_by_id(vars['id'])
+        try:
+            bus = db.get_arrival_by_id(vars['id'])
+        except IndexError:
+            abort(404)
     elif vars['type'] == 'departure':
-        bus = db.get_departure_by_id(vars['id'])
-        gates = db.get_gate_list()
+        try:
+            bus = db.get_departure_by_id(vars['id'])
+            gates = db.get_gate_list()
+        except IndexError:
+            abort(404)
     else:
         abort(404)
 

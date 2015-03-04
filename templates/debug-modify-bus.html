@@ -2,7 +2,7 @@
 <body>
 
 <h2>Modify Bus</h2>
-<form method="POST" action="/modify">
+<form method="POST" action="/modify/{% if bus.is_arrival is sameas True %}arrival{% else %}departure{% endif %}/{{ bus.ID }}/">
     <h3>{% if bus.is_arrival is sameas True %}Arrival{% else %}Departure{% endif %}</h3>
     <input type="hidden" name="id" value="{{ id }}" />
     <input type="hidden" name="type" value="{% if bus.is_arrival is sameas True %}arrival{% else %}departure{% endif %}" />
