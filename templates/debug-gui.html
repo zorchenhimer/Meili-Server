@@ -86,7 +86,7 @@
 <div>
     {% if arrivals %}
     <ul>{% for bus in arrivals %}
-        <li>{{ bus }}</li>
+        <li><a href="/modify?id={{ bus.ID }}&type=arrival">{{ bus }}</a></li>
     {% endfor %}</ul>
     {% else %}<p>No Arrivals. :C</p>{% endif %}
 </div>
@@ -95,7 +95,7 @@
 <div>
     {% if departures %}
     <ul>{% for bus in departures %}
-        <li>{{ bus }}</li>
+        <li><a href="/modify?id={{ bus.ID }}&type=departure">{{ bus }}</a></li>
     {% endfor %}</ul>
     {% else %}<p>No Departures. :C</p>{% endif %}
 </div>

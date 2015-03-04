@@ -57,7 +57,7 @@ class BusBase():
         self.Status = status
 
     def to_string(self):
-        return str([self.ID, self.Company, self.Status, self.Time, self.City])
+        return str(self.get_dict())
 
     def get_dict(self):
         ret_dict = { "company": self.Company,
@@ -83,6 +83,3 @@ class BusDeparture(BusBase):
         self.Number = number
         self.Gate = gate
         self.is_departure = True
-
-    def to_string(self):
-        return BusBase.to_string(self) + ' ' + str([self.Number, self.Gate])
