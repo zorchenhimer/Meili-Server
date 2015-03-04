@@ -1,0 +1,39 @@
+<html><head><title>Meili - Modify</title></head>
+<body>
+
+<h2>Modify Bus</h2>
+<form method="POST" action="/modify">
+    <h3>{% if bus.is_arrival is sameas True %}Arrival{% else %}Departure{% endif %}</h3>
+    <input type="hidden" name="id" value="{{ id }}" />
+    <input type="hidden" name="type" value="{% if bus.is_arrival is sameas True %}arrival{% else %}departure{% endif %}" />
+    <label for="company">Company: </label>
+    <select name="company" id="company">
+        {% for c in companies %}<option value="{{ c.id }}"{% if c.value == bus.Company %} selected{% endif %}>{{ c.value }}</option>{% endfor %}
+    </select><br />
+
+    <label for="city">City: </label>
+    <select name="city" id="city">
+        {% for c in cities %}<option value="{{ c.id }}"{% if c.value == bus.City %} selected{% endif %}>{{ c.value }}</option>{% endfor %}
+    </select><br />
+
+    <label for="status">Status: </label>
+    <select name="status" id="status">
+        {% for s in statuses %}<option value="{{ s.id }}"{% if s.value == bus.Status %} selected{% endif %}>{{ s.value }}</option>{% endfor %}
+    </select>
+
+    <br /><label for="time">Time: </label>
+    <input type="text" value="{{ bus.Time }}" name="time" id="time" />
+    {% if bus.is_departure is sameas True %}
+    <br /><label for="gate">Gate: </label>
+    <select name="gate" id="gate">
+        {% for g in gates %}
+        <option value="{{ g.id }}"{% if g.value == bus.Gate %} selected{% endif %}>{{ g.value }}</option>{% endfor %}
+    </select><br />
+
+    <label for="busnum">Bus Number: </label>
+    <input type="text" value="{{ bus.Number }}" />
+    {% endif %}
+    <br /><input type="submit" value="Submit" />
+</form>
+</body>
+</html>

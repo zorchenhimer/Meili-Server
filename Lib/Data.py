@@ -6,9 +6,22 @@ class BusStatus():
     UNKNOWN = 0
     ONTIME = 1
     DELAYED = 2
-    CANCELED = 3
     PROJECTED = 4
     BOARDING = 5
+
+class KeyValueData(object):
+    def __init__(self, id, value):
+        self.id = id
+        self.value = value
+
+    def __str__(self):
+        return '{i}: {v}'.format(i=self.id, v=self.value)
+
+    def __unicode__(self):
+        return self.__str__()
+
+    def __repr__(self):
+        return self.__str__()
 
 class BusList(list):
         def append_bus(self, data):
@@ -31,6 +44,8 @@ class BusBase():
         self.City = city        ## Destination/Origin
         self.Time = time        ## Departure/Arrival time
         self.Status = status
+        self.is_arrival = False
+        self.is_departure = False
 
     @property
     def TimeString(self):
@@ -43,12 +58,6 @@ class BusBase():
 
     def to_string(self):
         return str([self.ID, self.Company, self.Status, self.Time, self.City])
-
-    def is_arrival(self):
-        raise NotImplementedError
-
-    def is_departure(self):
-        raise NotImplementedError
 
     def get_dict(self):
         ret_dict = { "company": self.Company,
@@ -66,24 +75,14 @@ class BusBase():
 class BusArrival(BusBase):
     def __init__(self, company, city, time, status, ID):
         BusBase.__init__(self, company, city, time, status, ID)
-
-    def is_arrival(self):
-        return True
-
-    def is_departure(self):
-        return False
+        self.is_arrival = True
 
 class BusDeparture(BusBase):
     def __init__(self, company, city, time, status, gate, number, ID):
         BusBase.__init__(self, company, city, time, status, ID)
         self.Number = number
         self.Gate = gate
+        self.is_departure = True
 
     def to_string(self):
         return BusBase.to_string(self) + ' ' + str([self.Number, self.Gate])
-
-    def is_arrival(self):
-        return False
-
-    def is_departure(self):
-        return True

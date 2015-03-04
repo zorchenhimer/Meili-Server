@@ -6,7 +6,7 @@ import sqlite3 as lite
 
 from Lib.Database import BaseDB, DBCaches
 from Lib.Misc import singleton
-from Lib.Data import BusArrival, BusDeparture, BusList
+from Lib.Data import BusArrival, BusDeparture, BusList, KeyValueData
 
 @singleton
 class SQLiteDB(BaseDB):
@@ -105,6 +105,68 @@ LEFT JOIN gates
             )
         return departures
 
+    def get_arrival_by_id(self, id):
+        if id is None:
+            raise Exception("id is None!")
+        query = """
+SELECT
+    arrivals.id, arrivals.time,
+    cities.city, companies.company,
+    statuses.status
+FROM
+    arrivals
+LEFT JOIN companies
+    ON arrivals.company = companies.id
+LEFT JOIN cities
+    ON arrivals.city = cities.id
+LEFT JOIN statuses
+    ON arrivals.status = statuses.id
+WHERE
+    arrivals.id = ?"""
+        ret = self.__run_query(query, id)
+        row = ret[0]
+        arrival = BusArrival(
+            company = row[3], # Company
+            city = row[2], # City
+            time = row[1], # Time
+            status = row[4], # Status
+            ID = row[0], # ID
+        )
+        return arrival
+
+    def get_departure_by_id(self, id):
+        if id is None:
+            raise Exception("id is None!")
+        query = """
+SELECT
+    departures.id, departures.time,
+    cities.city, companies.company,
+    statuses.status, gates.gate, departures.busnum
+FROM
+    departures
+LEFT JOIN companies
+    ON departures.company = companies.id
+LEFT JOIN cities
+    ON departures.city = cities.id
+LEFT JOIN statuses
+    ON departures.status = statuses.id
+LEFT JOIN gates
+    ON departures.gate = gates.id
+WHERE
+    departures.id = ?"""
+        ret = self.__run_query(query, id)
+        row = ret[0]
+        departure = BusDeparture(
+            company = row[3], # Company
+            city = row[2], # City
+            time = row[1], # Time
+            status = row[4], # Status
+            ID = row[0], # ID
+            gate = row[5],
+            number = row[6],
+        )
+        return departure
+
     def add_arrival(self, company, city, time, status):
         if company.isdigit():
             co = int(company)
@@ -148,51 +210,51 @@ LEFT JOIN gates
         query = 'INSERT INTO departures (company, city, time, status, gate, busnum) VALUES (?, ?, ? ,?, ?, ?)'
         return self.__run_query(query, co, ci, int(time), st, gt, busnum)
 
-    def get_company_id(self, company):
-        cache = DBCaches()
-        ## Update if cache is older than an hour.
-        if cache.LastUpdate > time.time() - (60*60) or cache.Companies == None:
-            self.update_cache()
+    def modify_departure(self, ID, company, city, time, status, gate, number):
+        args = ()
+        args += (self.get_company_id(company),)
+        args += (self.get_city_id(city),)
+        args += (time,) ## FIXME: parse this from a time string
+        args += (self.get_status_id(status),)
+        args += (self.get_gate_id(gate),)
+        args += (number,)
+        args += (ID,)
 
-        co = None
-        for row in cache.Companies:
-            if row[1].lower() == company.lower():
-                co = row[0]
-                break
-            co = self.add_company(company)
-            cache.LastUpdate = 0    # Force update on next check
-        return co
+        query = """
+UPDATE OR ROLLBACK
+    departures
+SET
+    company = ?,
+    city = ?,
+    time = ?,
+    status = ?,
+    gate = ?,
+    busnum = ?
+WHERE
+    departures.id = ?
+        """
+        self.__run_query(query, *args)
 
-    def get_city_id(self, city):
-        cache = DBCaches()
-        ## Update if cache is older than an hour.
-        if cache.LastUpdate > time.time() - (60*60) or cache.Cities == None:
-            self.update_cache()
+    def modify_arrival(self, ID, company, city, time, status):
+        args = ()
+        args += (self.get_company_id(company),)
+        args += (self.get_city_id(city),)
+        args += (time,) ## FIXME: parse this from a time string
+        args += (self.get_status_id(status),)
+        args += (ID,)
 
-        ci = None
-        for row in cache.Cities:
-            if row[1].lower() == city.lower():
-                ci = row[0]
-                break
-            ci = self.add_city(city)
-            cache.LastUpdate = 0    # Force update on next check
-        return ci
-
-    def get_status_id(self, status):
-        cache = DBCaches()
-        ## Update if cache is older than an hour.
-        if cache.LastUpdate > time.time() - (60*60) or cache.Statuses == None:
-            self.update_cache()
-
-        st = None
-        for row in cache.Statuses:
-            if row[1].lower() == status.lower():
-                st = row[0]
-                break
-            #self.add_status(status)
-            #cache.LastUpdate = 0    # Force update on next check
-            raise Excetpion("Invalid status in get_status_id(): '%s'" % str(status))
-        return st
+        query = """
+UPDATE OR ROLLBACK
+    arrivals
+SET
+    company = ?,
+    city = ?,
+    time = ?,
+    status = ?
+WHERE
+    arrivals.id = ?
+        """
+        self.__run_query(query, *args)
 
     def add_company(self, company):
         query_add = 'INSERT INTO companies (company) VALUES (?)'
@@ -226,19 +288,35 @@ LEFT JOIN gates
 
     def get_city_list(self):
         query = 'SELECT id, city FROM cities'
-        return self.__run_query(query)
+        ret = self.__run_query(query)
+        dataset = []
+        for row in ret:
+            dataset.append(KeyValueData(row[0], row[1]))
+        return dataset
 
     def get_company_list(self):
         query = 'SELECT id, company FROM companies'
-        return self.__run_query(query)
+        ret = self.__run_query(query)
+        dataset = []
+        for row in ret:
+            dataset.append(KeyValueData(row[0], row[1]))
+        return dataset
 
     def get_status_list(self):
         query = 'SELECT id, status FROM statuses'
-        return self.__run_query(query)
+        ret = self.__run_query(query)
+        dataset = []
+        for row in ret:
+            dataset.append(KeyValueData(row[0], row[1]))
+        return dataset
 
     def get_gate_list(self):
         query = 'SELECT id, gate FROM gates'
-        return self.__run_query(query)
+        ret = self.__run_query(query)
+        dataset = []
+        for row in ret:
+            dataset.append(KeyValueData(row[0], row[1]))
+        return dataset
 
     def get_setting(self, name):
         query = 'SELECT value FROM settings WHERE name=?'
@@ -324,10 +402,33 @@ WHERE
 
     def update_cache(self):
         cache = DBCaches()
-        cache.Gates = self.__run_query('SELECT * FROM gates')
-        cache.Companies = self.__run_query('SELECT * FROM companies')
-        cache.Statuses = self.__run_query('SELECT * FROM statuses')
-        cache.Cities = self.__run_query('SELECT * FROM cities')
+        gt_raw = self.__run_query('SELECT * FROM gates')
+        co_raw = self.__run_query('SELECT * FROM companies')
+        st_raw = self.__run_query('SELECT * FROM statuses')
+        ci_raw = self.__run_query('SELECT * FROM cities')
+
+        gates = []
+        companies = []
+        cities = []
+        statuses = []
+
+        for row in gt_raw:
+            gates.append(KeyValueData(row[0], row[1]))
+
+        for row in co_raw:
+            companies.append(KeyValueData(row[0], row[1]))
+
+        for row in ci_raw:
+            cities.append(KeyValueData(row[0], row[1]))
+
+        for row in st_raw:
+            statuses.append(KeyValueData(row[0], row[1]))
+
+        cache.Gates = gates
+        cache.Companies = companies
+        cache.Cities = cities
+        cache.Statuses = statuses
+
         cache.LastUpdate = time.time()
 
     def __run_query(self, query, *args):

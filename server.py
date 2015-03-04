@@ -1,13 +1,15 @@
 #!/usr/bin/python2
 
 from flask import Flask, render_template, Response, abort, request, jsonify, make_response, redirect
-from Lib.Data import BusArrival, BusDeparture, BusList
+from Lib.Data import BusArrival, BusDeparture, BusList, KeyValueData
 from Lib.Database import DBCaches
 from Lib.SQLite import SQLiteDB
 import json
 import time
 
 server = Flask(__name__)
+
+# TODO: Make this a fatory
 db = SQLiteDB()
 
 def json_error(message):
@@ -115,6 +117,66 @@ def add_company():
     company = request.args.get('name')
     row = db.add_company(company)
     return jsonify({'id': int(row[0][0]), 'company': company})
+
+@server.route('/modify', methods=['GET', 'POST'])
+def modify_bus():
+    vars = {}
+    if request.method != 'POST':
+        vars['id'] = request.args.get('id')
+        vars['type'] = request.args.get('type')
+    else:
+        vars['id'] = request.form.get('id')
+        vars['type'] = request.form.get('type')
+        vars['city'] = request.form.get('city')
+        vars['company'] = request.form.get('company')
+        vars['time'] = request.form.get('time')
+        vars['status'] = request.form.get('status')
+
+        if vars['type'] == 'departure':
+            vars['gate'] = request.form.get('gate')
+            vars['busnum'] = request.form.get('busnum')
+            db.modify_departure(
+                    ID = vars['id'],
+                    city = vars['city'],
+                    company = vars['company'],
+                    time = vars['time'],
+                    status = vars['status'],
+                    gate = vars['gate'],
+                    number = vars['busnum'],
+                )
+        else:
+            db.modify_arrival(
+                    ID = vars['id'],
+                    city = vars['city'],
+                    company = vars['company'],
+                    time = vars['time'],
+                    status = vars['status'],
+                )
+
+    bus = None
+    gates = []
+
+    ## FIXME: validate this stuff.
+    if vars['type'] == 'arrival':
+        bus = db.get_arrival_by_id(vars['id'])
+    elif vars['type'] == 'departure':
+        bus = db.get_departure_by_id(vars['id'])
+        gates = db.get_gate_list()
+    else:
+        abort(404)
+
+    if bus is None:
+        print("bus is None!")
+        abort(404)
+
+    return render_template('debug-modify-bus.html',
+            companies = db.get_company_list(),
+            cities = db.get_city_list(),
+            statuses = db.get_status_list(),
+            bus = bus,
+            gates = gates,
+            id = vars['id'],
+        )
 
 @server.route('/cache')
 def debug_cache():
