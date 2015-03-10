@@ -69,47 +69,47 @@ def favicon():
 
 @server.route('/add_arrival', methods=['POST'])
 def add_arrival():
-    vars = {}
-    vars['company'] = request.form.get('company')
-    vars['city'] = request.form.get('city')
-    vars['time'] = request.form.get('time')
-    vars['status'] = request.form.get('status')
+    args = {}
+    args['company'] = request.form.get('company')
+    args['city'] = request.form.get('city')
+    args['time'] = request.form.get('time')
+    args['status'] = request.form.get('status')
 
     now = request.form.get('time_now')
     ret = ''
     if now is not None:
-        vars['time'] = time.time()
+        args['time'] = time.time()
 
-    for key,val in vars.items():
+    for key,val in args.items():
         if val is None:
             abort(json_error("Missing something"))
 
-    dbret = db.add_arrival(vars['company'], vars['city'], vars['time'], vars['status'])
+    dbret = db.add_arrival(args['company'], args['city'], args['time'], args['status'])
     return redirect('/', code=302)
 
 @server.route('/add_departure', methods=['GET', 'POST'])
 def add_departure():
-    vars = {}
-    vars['company'] = request.form.get('company')
-    vars['city'] = request.form.get('city')
-    vars['time'] = request.form.get('time')
-    vars['status'] = request.form.get('status')
-    vars['gate'] = request.form.get('gate')
-    vars['busnum'] = request.form.get('busnum')
+    args = {}
+    args['company'] = request.form.get('company')
+    args['city'] = request.form.get('city')
+    args['time'] = request.form.get('time')
+    args['status'] = request.form.get('status')
+    args['gate'] = request.form.get('gate')
+    args['busnum'] = request.form.get('busnum')
 
     now = request.form.get('time_now')
     ret = ''
     if now is not None:
-        vars['time'] = time.time()
+        args['time'] = time.time()
 
-    for key,val in vars.items():
+    for key,val in args.items():
         if key == 'busnum':
             ## This field can be blank. (should that be allowed?)
             continue
         if val is None:
             abort(json_error("Missing something"))
 
-    dbret = db.add_departure(vars['company'], vars['city'], vars['time'], vars['status'], vars['gate'], vars['busnum'])
+    dbret = db.add_departure(args['company'], args['city'], args['time'], args['status'], args['gate'], args['busnum'])
     return redirect('/', code=302)
 
 @server.route('/add_company', methods=['GET', 'POST'])
@@ -120,54 +120,54 @@ def add_company():
 
 @server.route('/modify/<bus_type>/<int:id>/', methods=['GET', 'POST'])
 def modify_bus(bus_type, id):
-    vars = {}
-    vars['id'] = id
+    args = {}
+    args['id'] = id
     if bus_type == 'arrival' or bus_type == 'departure':
-        vars['type'] = bus_type
+        args['type'] = bus_type
     else:
         abort(404)
 
     if request.method == 'POST':
-        vars['id'] = request.form.get('id')
-        vars['type'] = request.form.get('type')
-        vars['city'] = request.form.get('city')
-        vars['company'] = request.form.get('company')
-        vars['time'] = request.form.get('time')
-        vars['status'] = request.form.get('status')
+        args['id'] = request.form.get('id')
+        args['type'] = request.form.get('type')
+        args['city'] = request.form.get('city')
+        args['company'] = request.form.get('company')
+        args['time'] = request.form.get('time')
+        args['status'] = request.form.get('status')
 
-        if vars['type'] == 'departure':
-            vars['gate'] = request.form.get('gate')
-            vars['busnum'] = request.form.get('busnum')
+        if args['type'] == 'departure':
+            args['gate'] = request.form.get('gate')
+            args['busnum'] = request.form.get('busnum')
             db.modify_departure(
-                    ID = vars['id'],
-                    city = vars['city'],
-                    company = vars['company'],
-                    time = vars['time'],
-                    status = vars['status'],
-                    gate = vars['gate'],
-                    number = vars['busnum'],
+                    ID = args['id'],
+                    city = args['city'],
+                    company = args['company'],
+                    time = args['time'],
+                    status = args['status'],
+                    gate = args['gate'],
+                    number = args['busnum'],
                 )
         else:
             db.modify_arrival(
-                    ID = vars['id'],
-                    city = vars['city'],
-                    company = vars['company'],
-                    time = vars['time'],
-                    status = vars['status'],
+                    ID = args['id'],
+                    city = args['city'],
+                    company = args['company'],
+                    time = args['time'],
+                    status = args['status'],
                 )
 
     bus = None
     gates = []
 
     ## FIXME: validate this stuff.
-    if vars['type'] == 'arrival':
+    if args['type'] == 'arrival':
         try:
-            bus = db.get_arrival_by_id(vars['id'])
+            bus = db.get_arrival_by_id(args['id'])
         except IndexError:
             abort(404)
-    elif vars['type'] == 'departure':
+    elif args['type'] == 'departure':
         try:
-            bus = db.get_departure_by_id(vars['id'])
+            bus = db.get_departure_by_id(args['id'])
             gates = db.get_gate_list()
         except IndexError:
             abort(404)
@@ -184,7 +184,7 @@ def modify_bus(bus_type, id):
             statuses = db.get_status_list(),
             bus = bus,
             gates = gates,
-            id = vars['id'],
+            id = args['id'],
         )
 
 @server.route('/cache')
